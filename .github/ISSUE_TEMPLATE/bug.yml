@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a reproducible SecDoctor defect
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Do not post security vulnerabilities here. Use GitHub private vulnerability reporting."
+  - type: input
+    id: version
+    attributes:
+      label: SecDoctor version
+      placeholder: v1.0.0-rc2
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Include minimal steps. Remove secrets and private source code.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true

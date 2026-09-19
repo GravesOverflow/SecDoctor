@@ -1,0 +1,21 @@
+# Build output
+bin/
+dist/
+release/
+*.exe
+secdoctor
+
+# Go
+coverage.out
+*.test
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local SecDoctor state
+.secdoctor/
+Vuln.txt
+secdoctor-proof.*
