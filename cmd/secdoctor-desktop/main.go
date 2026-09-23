@@ -20,9 +20,10 @@ import (
 
 	"secdoctor/internal/audit"
 	"secdoctor/internal/remediate"
+	"secdoctor/internal/report"
 )
 
-const version = "1.0.0-rc2"
+const version = "1.0.0-rc3"
 
 //go:embed web/*
 var assets embed.FS
@@ -41,6 +42,7 @@ func main() {
 	mux.HandleFunc("/api/fix/proof", fixProof)
 	mux.HandleFunc("/api/fix/apply", fixApply)
 	mux.HandleFunc("/api/fix/rollback", fixRollback)
+	mux.HandleFunc("/api/report/export", exportReport)
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	fatal(err)
 	token, err := newSessionToken()
@@ -248,4 +250,67 @@ func fixProof(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	write(w, 200, map[string]any{"verified": true, "proof": proof})
+}
+
+func exportReport(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		write(w, 405, map[string]string{"error": "POST required"})
+		return
+	}
+	var q struct {
+		Path   string `json:"path"`
+		PlanID string `json:"plan_id"`
+	}
+	if json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&q) != nil {
+		write(w, 400, map[string]string{"error": "Invalid request"})
+		return
+	}
+	if strings.TrimSpace(q.Path) == "" {
+		q.Path = "."
+	}
+	root, err := filepath.Abs(q.Path)
+	if err != nil {
+		write(w, 400, map[string]string{"error": err.Error()})
+		return
+	}
+	info, err := os.Stat(root)
+	if err != nil || !info.IsDir() {
+		write(w, 400, map[string]string{"error": "Project directory not found"})
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
+	defer cancel()
+	a, err := audit.Run(ctx, root, false)
+	if err != nil {
+		write(w, 500, map[string]string{"error": err.Error()})
+		return
+	}
+
+	var proof *remediate.LabProof
+	proofVerified := false
+	if q.PlanID != "" {
+		p, proofErr := remediate.Proof(q.PlanID)
+		if proofErr != nil {
+			write(w, 400, map[string]string{"error": "Remediation proof not found"})
+			return
+		}
+		if p.Project != root {
+			write(w, 409, map[string]string{"error": "Remediation proof belongs to a different project"})
+			return
+		}
+		proof = &p
+		proofVerified = remediate.VerifyProofSignature(p) == nil
+	}
+	rep := report.Build(a, version, proof, proofVerified)
+	j, err := report.JSON(rep)
+	if err != nil {
+		write(w, 500, map[string]string{"error": err.Error()})
+		return
+	}
+	write(w, 200, map[string]string{
+		"markdown_filename": report.Filename(rep.Project, "md"),
+		"markdown":          string(report.Markdown(rep)),
+		"json_filename":     report.Filename(rep.Project, "json"),
+		"json":              string(j) + "\n",
+	})
 }

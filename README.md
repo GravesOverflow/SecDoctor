@@ -4,7 +4,7 @@
 
 SecDoctor is a local-first dependency security remediation tool. It audits a project, previews an npm dependency fix, verifies the candidate in an isolated Lab, signs the verification proof, applies the reviewed lockfile, verifies the installed runtime, and can roll the project back.
 
-> Current release candidate: **v1.0.0-rc2**
+> Current release candidate: **v1.0.0-rc3**
 
 ## What makes it useful
 
@@ -28,6 +28,12 @@ SECURITY.md
 Run `SecDoctor.exe`, select a local project, and use **Full Audit**.
 
 The desktop server binds only to loopback. API requests require a random per-process session token and reject foreign browser Origins.
+
+## Security report export
+
+After a completed audit, **Export report** generates both a human-readable Markdown report and a machine-readable JSON report (`secdoctor.report/v1`). Reports include provider completeness, severity counts, vulnerability details, local findings, audit coverage, and—when available—a locally verified remediation-proof summary.
+
+Exports intentionally use only the project directory name rather than its absolute path and do not include the proof private key, session token, raw signature, public key, command output, or test output.
 
 ## Supported remediation
 

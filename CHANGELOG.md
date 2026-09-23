@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0-rc3
+- Added one-click Security Report export from the Desktop UI.
+- Added `secdoctor.report/v1` JSON output plus a human-readable Markdown report.
+- Reports preserve fail-closed provider status and audit coverage instead of presenting incomplete intelligence as clean.
+- Added optional locally verified Lab-proof summary and reviewed dependency changes.
+- Report exports redact absolute project paths and omit session tokens, proof key/signature material, command output, and test output.
+- Added report rendering, redaction, severity-summary, and safe-filename regression tests.
+
 ## 1.0.0-rc2
 - Fixed Windows rollback failures caused by npm `ENOTEMPTY`/`EPERM`/`EBUSY` while replacing `node_modules`.
 - On those transient filesystem failures, SecDoctor removes disposable `node_modules` with bounded retries and reruns `npm ci` from the restored lockfile.
